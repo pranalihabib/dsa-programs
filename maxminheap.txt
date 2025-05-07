@@ -1,0 +1,106 @@
+#include <iostream>
+using namespace std;
+
+const int MAX_SIZE = 100;
+
+class MaxHeap {
+    int heap[MAX_SIZE];
+    int size;
+
+public:
+    MaxHeap() {
+        size = 0;
+    }
+
+    void insert(int val) {
+        if (size == MAX_SIZE) {
+            cout << "Heap is full\n";
+            return;
+        }
+        heap[size] = val;
+        upAdjust(size);
+        size++;
+    }
+
+    void upAdjust(int index) {
+        while (index > 0) {
+            int parent = (index - 1) / 2;
+            if (heap[parent] < heap[index]) {
+                swap(heap[parent], heap[index]);
+                index = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    int getMax() {
+        if (size == 0) {
+            cout << "Heap is empty\n";
+            return -1;
+        }
+        return heap[0];
+    }
+};
+
+class MinHeap {
+    int heap[MAX_SIZE];
+    int size;
+
+public:
+    MinHeap() {
+        size = 0;
+    }
+
+    void insert(int val) {
+        if (size == MAX_SIZE) {
+            cout << "Heap is full\n";
+            return;
+        }
+        heap[size] = val;
+        upAdjust(size);
+        size++;
+    }
+
+    void upAdjust(int index) {
+        while (index > 0) {
+            int parent = (index - 1) / 2;
+            if (heap[parent] > heap[index]) {
+                swap(heap[parent], heap[index]);
+                index = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    int getMin() {
+        if (size == 0) {
+            cout << "Heap is empty\n";
+            return -1;
+        }
+        return heap[0];
+    }
+};
+
+int main() {
+    int marks[100];
+    int num = 0;
+    cout << "Enter number of students: ";
+    cin >> num;
+    for (int i = 0; i < num; i++) {
+        cout << "Enter marks of student at position " << i + 1 << ": ";
+        cin >> marks[i];
+    }
+    int n = num;
+    MaxHeap maxHeap;
+    MinHeap minHeap;
+    for (int i = 0; i < n; i++) {
+        maxHeap.insert(marks[i]);
+        minHeap.insert(marks[i]);
+    }
+    cout << "Maximum Marks: " << maxHeap.getMax() << endl;
+    cout << "Minimum Marks: " << minHeap.getMin() << endl;
+    return 0;
+}
+

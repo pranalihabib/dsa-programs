@@ -1,0 +1,290 @@
+/*To create ADT that implement the "set" concept.
+a. Add (new Element) -Place a value into the set , b. Remove (element) Remove the
+value
+c. Contains (element) Return true if element is in collection, 
+d. Size () Return number of values in collection 
+e. Iterator () Return an iterator used to loop over collection, f.
+Intersection of two sets , g. Union of two sets, h. Difference between two sets, i. Subset*/
+#include <iostream>
+using namespace std;
+
+class Set{
+	private:
+		int arr[100];
+		int size;
+	public:	
+	
+	Set() : size(0) {} 
+
+	
+	void insert(int element) {     //check if it already exists and then add if not 
+    for (int i = 0; i < size; i++) {
+        if (arr[i] == element) {
+            return; 
+        }
+    }
+    arr[size++] = element; 
+}
+	
+	void remove(int key) {       //go to the index of the element, if index is still at -1 return since element does not exist. if not, move the elements behind 
+        int index = -1;
+        for (int i = 0;i<size;i++) {
+            if (arr[i] == key) {
+                index = i;
+                break;
+            }
+        }
+        if (index==-1) {
+            cout << "Element not found" << endl;
+            return;
+        }
+        for (int i=index;i<size-1;i++) {
+            arr[i] = arr[i + 1];
+        }
+        size--;
+        cout << "Element removed successfully" << endl;
+    }
+
+    void iterator() {         //print func
+        for (int i = 0; i < size; i++) {
+            cout << arr[i] << " ";
+        }
+        cout << endl;
+    }
+
+    void createSet(int elements[], int n) {
+        for (int i=0;i<n;i++) {
+            insert(elements[i]);
+        }
+	    size = n;
+        cout << "Set created successfully." << endl;
+    }
+    
+    void display(){
+    	for(int i=0;i<size;i++){
+    		cout<<arr[i]<<" ";
+		}
+		cout<<endl;
+	}
+	
+	void search(int key){
+		bool flag=false;
+		for(int i=0;i<size;i++){
+			if(arr[i]==key){
+				flag=true;
+				break;
+			}
+		}
+		if(flag==true){
+			cout<<"Element found."<<endl;
+		}
+		else{
+			cout<<"Element not found."<<endl;
+		}
+	}
+	
+	int getLength(){
+		int count=0;
+		for(int i=0;i<size;i++){
+			count++;
+		}
+		return count;
+	}
+
+	friend Set setIntersection(Set &obj1, Set &obj2);
+	friend Set setUnion(Set &obj1, Set &obj2);
+    friend Set setDifference(Set &obj1,Set &obj2);
+    friend bool setSubset(Set &obj1,Set &obj2);
+    void subsets();
+};
+
+	Set setUnion(Set &obj1, Set &obj2) {
+        Set result;
+        for (int i= 0;i<obj1.size;i++) {
+            result.insert(obj1.arr[i]);
+        }
+        bool flag;
+        for(int j=0;j<obj2.size;j++){            //set b
+        	flag=false;
+        	for(int k=0;k<obj1.size;k++){           //set a
+        		if(obj2.arr[j]==obj1.arr[k]){
+        		flag=true;
+				break;	
+				}
+			}
+			if(!flag){
+					result.insert(obj2.arr[j]);
+		    }
+		}
+        return result;
+    }
+    
+    Set setIntersection(Set &obj1, Set &obj2){
+        Set result2;
+        for(int i=0;i<obj1.size;i++){                   //set a
+            for(int j=0;j<obj2.size;j++){             //set b
+                if(obj1.arr[i]==obj2.arr[j]){
+                    result2.insert(obj1.arr[i]);
+                }
+            }
+        }
+        return result2;
+    }
+
+    Set setDifference(Set &obj1,Set &obj2){
+        Set result;
+        bool flag;
+        for(int i=0;i<obj1.size;i++){
+            flag=false;
+            for(int j=0;j<obj2.size;j++){
+                if(obj1.arr[i]==obj2.arr[j]){
+                    flag =true;
+                    break;
+                }
+            }
+            if(flag==false){
+                result.insert(obj1.arr[i]);
+            }
+        }
+        return result;
+    }
+
+
+    void Set::subsets() {
+        int total = 1<<size; // 2^size
+        cout << "All subsets:\n";
+        for (int i = 0; i < total; i++) {
+            cout << "{ ";
+            for (int j = 0; j < size; j++) {
+                if (i & (1 << j)) {
+                    cout << arr[j] << " ";
+                }
+            }
+            cout << "}" << endl;
+        }
+    }    
+    
+
+int main() {
+    Set s1, s2;
+    int choice;
+
+    do {
+        cout << "\n---- Set Operations Menu ----\n";
+        cout << "1. Create Set 1\n";
+        cout << "2. Create Set 2\n";
+        cout << "3. Display Set 1\n";
+        cout << "4. Display Set 2\n";
+        cout << "5. Insert in Set 1\n";
+        cout << "6. Insert in Set 2\n";
+        cout << "7. Remove from Set 1\n";
+        cout << "8. Remove from Set 2\n";
+        cout << "9. Search in Set 1\n";
+        cout << "10. Search in Set 2\n";
+        cout << "11. Get Length of Set 1\n";
+        cout << "12. Get Length of Set 2\n";
+        cout << "13. Union\n";
+        cout << "14. Intersection\n";
+        cout << "15. Difference (Set1 - Set2)\n";
+        cout << "16. Print all subsets\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: {
+                int n, elements[10];
+                cout << "Enter number of elements for Set 1: ";
+                cin >> n;
+                cout << "Enter elements: ";
+                for (int i = 0; i < n; i++) cin >> elements[i];
+                s1.createSet(elements, n);
+                break;
+            }
+            case 2: {
+                int n, elements[10];
+                cout << "Enter number of elements for Set 2: ";
+                cin >> n;
+                cout << "Enter elements: ";
+                for (int i = 0; i < n; i++) cin >> elements[i];
+                s2.createSet(elements, n);
+                break;
+            }
+            case 3: s1.display(); break;
+            case 4: s2.display(); break;
+            case 5: {
+                int val;
+                cout << "Enter value to insert in Set 1: ";
+                cin >> val;
+                s1.insert(val);
+                break;
+            }
+            case 6: {
+                int val;
+                cout << "Enter value to insert in Set 2: ";
+                cin >> val;
+                s2.insert(val);
+                break;
+            }
+            case 7: {
+                int val;
+                cout << "Enter value to remove from Set 1: ";
+                cin >> val;
+                s1.remove(val);
+                break;
+            }
+            case 8: {
+                int val;
+                cout << "Enter value to remove from Set 2: ";
+                cin >> val;
+                s2.remove(val);
+                break;
+            }
+            case 9: {
+                int key;
+                cout << "Enter value to search in Set 1: ";
+                cin >> key;
+                s1.search(key);
+                break;
+            }
+            case 10: {
+                int key;
+                cout << "Enter value to search in Set 2: ";
+                cin >> key;
+                s2.search(key);
+                break;
+            }
+            case 11: cout << "Length of Set 1: " << s1.getLength() << endl; break;
+            case 12: cout << "Length of Set 2: " << s2.getLength() << endl; break;
+            case 13: {
+                Set u = setUnion(s1, s2);
+                cout << "Union: ";
+                u.display();
+                break;
+            }
+            case 14: {
+                Set i = setIntersection(s1, s2);
+                cout << "Intersection: ";
+                i.display();
+                break;
+            }
+            case 15: {
+                Set d = setDifference(s1, s2);
+                cout << "Difference (Set1 - Set2): ";
+                d.display();
+                break;
+            }
+            case 16: {
+                cout<<"Set 1:"<<endl;
+                s1.subsets();  
+                cout<<"Set 2:"<<endl;
+                s2.subsets();  
+                break;
+            }
+            case 0: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 0);
+
+    return 0;
+}

@@ -1,0 +1,223 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <cstdio>
+using namespace std;
+
+struct Student {
+    string roll_no;
+    string name;
+    string division;
+    string address;
+    bool isDeleted = false;
+};
+
+const string filename = "student.txt";
+
+void addStudent() {
+    Student s;
+    cout << "Enter Roll Number: ";
+    cin >> s.roll_no;
+    cout << "Enter Name: ";
+    cin.ignore();
+    getline(cin, s.name);
+    cout << "Enter Division: ";
+    cin >> s.division;
+    cout << "Enter Address: ";
+    cin.ignore();
+    getline(cin, s.address);
+
+    ofstream file(filename, ios::app); 
+    file << s.roll_no << "," << s.name << "," << s.division << "," << s.address << ",0\n";
+    file.close();
+    cout << "Student record added successfully.\n";
+}
+
+void displayStudents() {
+    ifstream file(filename);
+    string line;
+    bool found = false;
+
+    cout << "\n--- All Student Records ---\n";
+    while (getline(file, line)) {
+        istringstream ss(line);
+        string roll_no, name, division, address, deletedFlag;
+        getline(ss, roll_no, ',');
+        getline(ss, name, ',');
+        getline(ss, division, ',');
+        getline(ss, address, ',');
+        getline(ss, deletedFlag);
+
+        if (deletedFlag != "1") {
+            found = true;
+            cout << "Roll No: " << roll_no << "\nName: " << name
+                 << "\nDivision: " << division << "\nAddress: " << address << "\n---\n";
+        }
+    }
+    file.close();
+    if (!found) cout << "No records to display (all might be deleted).\n";
+}
+
+
+void logicalDelete() {
+    string roll;
+    cout << "Enter roll number to logically delete: ";
+    cin >> roll;
+    fstream file(filename, ios::in | ios::out);
+    string line;
+    bool deleted = false;
+
+    while (getline(file, line)) {
+        istringstream ss(line);
+        string roll_no, name, division, address, deletedFlag;
+        long pos = file.tellg();  
+
+        getline(ss, roll_no, ',');
+        getline(ss, name, ',');
+        getline(ss, division, ',');
+        getline(ss, address, ',');
+        getline(ss, deletedFlag);
+
+        if (roll_no == roll && deletedFlag != "1") {
+            file.seekp(pos - line.length() - 1);  
+            file << roll_no << "," << name << "," << division << "," << address << ",1\n"; 
+            deleted = true;
+            break;
+        }
+    }
+
+    file.close();
+    if (deleted) cout << "Student logically deleted.\n";
+    else cout << "Record not found or already deleted.\n";
+}
+
+void physicalDelete() {
+    string roll;
+    cout << "Enter roll number to physically delete: ";
+    cin >> roll;
+    ifstream file(filename);
+    ofstream temp("temp.txt");
+    string line;
+    bool deleted = false;
+
+    while (getline(file, line)) {
+        istringstream ss(line);
+        string roll_no, name, division, address, deletedFlag;
+        getline(ss, roll_no, ',');
+        getline(ss, name, ',');
+        getline(ss, division, ',');
+        getline(ss, address, ',');
+        getline(ss, deletedFlag);
+
+        if (roll_no != roll || deletedFlag == "1") {
+            temp << line << "\n";
+        } else {
+            deleted = true;
+        }
+    }
+
+    file.close();
+    temp.close();
+    remove(filename.c_str());
+    rename("temp.txt", filename.c_str());
+
+    if (deleted) cout << "Student physically deleted.\n";
+    else cout << "Record not found.\n";
+}
+
+void updateStudent() {
+    string roll;
+    cout << "Enter roll number to update: ";
+    cin >> roll;
+    fstream file(filename, ios::in | ios::out);
+    string line;
+    bool updated = false;
+
+    while (getline(file, line)) {
+        istringstream ss(line);
+        string roll_no, name, division, address, deletedFlag;
+        long pos = file.tellg();  
+
+        getline(ss, roll_no, ',');
+        getline(ss, name, ',');
+        getline(ss, division, ',');
+        getline(ss, address, ',');
+        getline(ss, deletedFlag);
+
+        if (roll_no == roll && deletedFlag != "1") {
+            Student s;
+            s.roll_no = roll_no;
+            cout << "Enter new name: ";
+            cin.ignore();
+            getline(cin, s.name);
+            cout << "Enter new division: ";
+            cin >> s.division;
+            cout << "Enter new address: ";
+            cin.ignore();
+            getline(cin, s.address);
+
+            file.seekp(pos - line.length() - 1);  
+            file << s.roll_no << "," << s.name << "," << s.division << "," << s.address << ",0\n";
+            updated = true;
+            break;
+        }
+    }
+
+    file.close();
+    if (updated) cout << "Record updated successfully.\n";
+    else cout << "Record not found or already deleted.\n";
+}
+
+void search() {
+    string roll;
+    cout << "Enter roll number to check: ";
+    cin >> roll;
+    ifstream file(filename);
+    string line;
+    bool exists = false;
+
+    while (getline(file, line)) {
+        istringstream ss(line);
+        string roll_no, name, division, address, deletedFlag;
+        getline(ss, roll_no, ',');
+        getline(ss, name, ',');
+        getline(ss, division, ',');
+        getline(ss, address, ',');
+        getline(ss, deletedFlag);
+
+        if (roll_no == roll && deletedFlag != "1") {
+            exists = true;
+            break;
+        }
+    }
+
+    file.close();
+    if (exists) cout << "Record exists.\n";
+    else cout << "Record does not exist.\n";
+}
+
+int main() {
+    int choice;
+    do {
+        cout << "\n*** Student Information System ***\n";
+        cout << "1. Add Student\n2. Display Students\n3. Logical Delete\n";
+        cout << "4. Physical Delete\n5. Update Student\n6. Search\n7. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        switch (choice) {
+            case 1: addStudent(); break;
+            case 2: displayStudents(); break;
+            case 3: logicalDelete(); break;
+            case 4: physicalDelete(); break;
+            case 5: updateStudent(); break;
+            case 6: search(); break;
+            case 7: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 7);
+    return 0;
+}
+
+
+

@@ -1,0 +1,316 @@
+#include<iostream>
+#include<fstream>
+#include<cstring>
+#include <sstream>
+#include<iomanip>
+using namespace std;
+
+class EmployeeSystem {
+   struct Employee {
+       int emp_id;
+       char name[50];
+       char designation[50];
+       double salary;
+   };
+
+   struct Index {
+       int emp_id;
+       int position;
+   };
+
+   Employee emp;
+   Index idx;
+
+public:
+   void Create();
+   void Display();
+   void Update();
+   void Delete();
+   void Search();
+   void Append();
+};
+
+void EmployeeSystem::Create() {
+   char ch = 'y';
+   ofstream empFile("EMPLOYEE.txt");
+   ofstream indexFile("INDEX.txt");
+
+   if(!empFile || !indexFile) {
+       cout << "Error in file creation!";
+       return;
+   }
+
+   int recordPos = 0;
+   do {
+       cout << "\nEnter Employee ID: ";
+       cin >> emp.emp_id;
+       cout << "Enter Name: ";
+       cin.ignore();
+       cin.getline(emp.name, 50);
+       cout << "Enter Designation: ";
+       cin.getline(emp.designation, 50);
+       cout << "Enter Salary: ";
+       cin >> emp.salary;
+
+       // Write to employee file
+       empFile << emp.emp_id << '|' << emp.name << '|' << emp.designation << '|' << emp.salary << '\n';
+
+       // Update index
+       idx.emp_id = emp.emp_id;
+       idx.position = recordPos++;
+       indexFile << idx.emp_id << ' ' << idx.position << '\n';
+
+       cout << "Add more records? (y/n): ";
+       cin >> ch;
+   } while(ch == 'y' || ch == 'Y');
+
+   empFile.close();
+   indexFile.close();
+}
+
+void EmployeeSystem::Display() {
+   ifstream empFile("EMPLOYEE.txt");
+   ifstream indexFile("INDEX.txt");
+
+   if(!empFile || !indexFile) {
+       cout << "Error opening files!";
+       return;
+   }
+
+   cout << "\nEmployee Records:\n";
+   cout << setw(10) << "ID" << setw(20) << "Name"
+        << setw(20) << "Designation" << setw(15) << "Salary" << endl;
+
+   int emp_id, position;
+   string line;
+   while(indexFile >> emp_id >> position) {
+       if(emp_id == -1) continue;
+
+       empFile.clear();
+       empFile.seekg(0);
+       int currentPos = 0;
+       while(getline(empFile, line)) {
+           if(currentPos == position) {
+               if(line.find("-1|") == 0) break; // Deleted
+               sscanf(line.c_str(), "%d|%[^|]|%[^|]|%lf", &emp.emp_id, emp.name, emp.designation, &emp.salary);
+               cout << setw(10) << emp.emp_id
+                    << setw(20) << emp.name
+                    << setw(20) << emp.designation
+                    << setw(15) << fixed << setprecision(2) << emp.salary << endl;
+               break;
+           }
+           currentPos++;
+       }
+   }
+
+   empFile.close();
+   indexFile.close();
+}
+
+void EmployeeSystem::Search() {
+   int searchId;
+   cout << "Enter Employee ID to search: ";
+   cin >> searchId;
+
+   ifstream empFile("EMPLOYEE.txt");
+   ifstream indexFile("INDEX.txt");
+
+   bool found = false;
+   int emp_id, position;
+   string line;
+   while(indexFile >> emp_id >> position) {
+       if(emp_id == searchId) {
+           empFile.clear();
+           empFile.seekg(0);
+           int currentPos = 0;
+           while(getline(empFile, line)) {
+               if(currentPos == position) {
+                   if(line.find("-1|") == 0) break; // Deleted
+                   sscanf(line.c_str(), "%d|%[^|]|%[^|]|%lf", &emp.emp_id, emp.name, emp.designation, &emp.salary);
+                   cout << "\nEmployee Found:\n";
+                   cout << "ID: " << emp.emp_id << endl;
+                   cout << "Name: " << emp.name << endl;
+                   cout << "Designation: " << emp.designation << endl;
+                   cout << "Salary: " << fixed << setprecision(2) << emp.salary << endl;
+                   found = true;
+                   break;
+               }
+               currentPos++;
+           }
+           break;
+       }
+   }
+
+   if(!found) cout << "Employee not found!\n";
+
+   empFile.close();
+   indexFile.close();
+}
+
+void EmployeeSystem::Update() {
+   int updateId;
+   cout << "Enter Employee ID to update: ";
+   cin >> updateId;
+
+   fstream empFile("EMPLOYEE.txt", ios::in);
+   fstream indexFile("INDEX.txt", ios::in);
+
+   vector<string> records;
+   string line;
+   while(getline(empFile, line)) records.push_back(line);
+
+   empFile.close();
+
+   int emp_id, position;
+   bool found = false;
+   while(indexFile >> emp_id >> position) {
+       if(emp_id == updateId) {
+           sscanf(records[position].c_str(), "%d|%[^|]|%[^|]|%lf", &emp.emp_id, emp.name, emp.designation, &emp.salary);
+
+           cout << "Current Details:\n";
+           cout << "Name: " << emp.name << endl;
+           cout << "Designation: " << emp.designation << endl;
+           cout << "Salary: " << fixed << setprecision(2) << emp.salary << endl;
+
+           cout << "\nEnter new details:\n";
+           cout << "Name: ";
+           cin.ignore();
+           cin.getline(emp.name, 50);
+           cout << "Designation: ";
+           cin.getline(emp.designation, 50);
+           cout << "Salary: ";
+           cin >> emp.salary;
+
+           stringstream ss;
+           ss << emp.emp_id << '|' << emp.name << '|' << emp.designation << '|' << emp.salary;
+           records[position] = ss.str();
+           found = true;
+           break;
+       }
+   }
+
+   indexFile.close();
+
+   if(found) {
+       ofstream outFile("EMPLOYEE.txt");
+       for(const auto& rec : records) outFile << rec << '\n';
+       outFile.close();
+       cout << "Record updated successfully!\n";
+   } else {
+       cout << "Employee not found!\n";
+   }
+}
+
+void EmployeeSystem::Delete() {
+   int deleteId;
+   cout << "Enter Employee ID to delete: ";
+   cin >> deleteId;
+
+   fstream empFile("EMPLOYEE.txt", ios::in);
+   fstream indexFile("INDEX.txt", ios::in);
+
+   vector<string> records;
+   string line;
+   while(getline(empFile, line)) records.push_back(line);
+   empFile.close();
+
+   vector<pair<int, int>> indices;
+   int emp_id, position;
+   bool found = false;
+   while(indexFile >> emp_id >> position) {
+       if(emp_id == deleteId) {
+           records[position] = "-1|Deleted|Deleted|0";
+           emp_id = -1;
+           found = true;
+       }
+       indices.push_back({emp_id, position});
+   }
+   indexFile.close();
+
+   if(found) {
+       ofstream outEmp("EMPLOYEE.txt");
+       for(const auto& rec : records) outEmp << rec << '\n';
+       outEmp.close();
+
+       ofstream outIndex("INDEX.txt");
+       for(const auto& idx : indices)
+           outIndex << idx.first << ' ' << idx.second << '\n';
+       outIndex.close();
+
+       cout << "Record deleted successfully!\n";
+   } else {
+       cout << "Employee not found!\n";
+   }
+}
+
+void EmployeeSystem::Append() {
+   ofstream empFile("EMPLOYEE.txt", ios::app);
+   ofstream indexFile("INDEX.txt", ios::app);
+
+   if(!empFile || !indexFile) {
+       cout << "Error opening files!";
+       return;
+   }
+
+   cout << "\nEnter Employee ID: ";
+   cin >> emp.emp_id;
+   cout << "Enter Name: ";
+   cin.ignore();
+   cin.getline(emp.name, 50);
+   cout << "Enter Designation: ";
+   cin.getline(emp.designation, 50);
+   cout << "Enter Salary: ";
+   cin >> emp.salary;
+
+   // Count existing records
+   ifstream countFile("EMPLOYEE.txt");
+   int pos = 0; string tmp;
+   while(getline(countFile, tmp)) pos++;
+   countFile.close();
+
+   empFile << emp.emp_id << '|' << emp.name << '|' << emp.designation << '|' << emp.salary << '\n';
+   indexFile << emp.emp_id << ' ' << pos << '\n';
+
+   cout << "Record added successfully!\n";
+
+   empFile.close();
+   indexFile.close();
+}
+
+int main() {
+   EmployeeSystem es;
+   int choice;
+   char cont;
+
+   do {
+       cout << "\nEmployee Record System\n";
+       cout << "1. Create Database\n";
+       cout << "2. Display All Records\n";
+       cout << "3. Search Record\n";
+       cout << "4. Update Record\n";
+       cout << "5. Delete Record\n";
+       cout << "6. Append Record\n";
+       cout << "7. Exit\n";
+       cout << "Enter your choice: ";
+       cin >> choice;
+
+       switch(choice) {
+           case 1: es.Create(); break;
+           case 2: es.Display(); break;
+           case 3: es.Search(); break;
+           case 4: es.Update(); break;
+           case 5: es.Delete(); break;
+           case 6: es.Append(); break;
+           case 7: return 0;
+           default: cout << "Invalid choice!\n";
+       }
+
+       if(choice != 7) {
+           cout << "\nContinue? (y/n): ";
+           cin >> cont;
+       }
+   } while(cont == 'y' || cont == 'Y');
+
+   return 0;
+}
+
